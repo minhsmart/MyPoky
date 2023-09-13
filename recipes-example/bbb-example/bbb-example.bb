@@ -5,7 +5,7 @@ SRC_URI = "git://github.com/Munawar-git/bbb-tutorial-code.git;protocol=https;bra
 SRCREV = "f1be90c683cc1fe31f58f3f8b081562e8b5c8230"
 
 #SRC_URI:append = " file://0001-patch-example.patch"
-SRC_URI:append = " file://0001-Changedthe-goodbye-message.patch"
+#SRC_URI:append = " file://0001-Changedthe-goodbye-message.patch"
 
 S = "${WORKDIR}/git"
 

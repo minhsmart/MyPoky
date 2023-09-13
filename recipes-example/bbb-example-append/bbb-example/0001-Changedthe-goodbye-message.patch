@@ -1,0 +1,29 @@
+From 68a96282f0397b2d71eac860e67742f0deb1c911 Mon Sep 17 00:00:00 2001
+From: Nguyen Anh Minh <mn113839@gmail.com>
+Date: Fri, 8 Sep 2023 07:30:25 +0000
+Subject: [PATCH] Changedthe goodbye message
+
+---
+ bbb-example.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/bbb-example.c b/bbb-example.c
+index 6f31000..8c4bbbb 100644
+--- a/bbb-example.c
++++ b/bbb-example.c
+@@ -14,9 +14,9 @@ int main() {
+     #endif
+   #endif
+ 
+-  #ifdef BYE
+-    #if BYE == y
+-      printf("Bye, keep learning!!\n");
++  #ifdef GOODBYE
++    #if GOODBYE == y
++      printf("Good Bye, See you again!!\n");
+     #endif
+   #endif
+ 
+-- 
+2.25.1
+
