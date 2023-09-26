@@ -1,0 +1,23 @@
+From 4143b8ed1c4419cc6fdb14df14f44362235b496d Mon Sep 17 00:00:00 2001
+From: OpenEmbedded <oe.patch@oe>
+Date: Mon, 25 Sep 2023 16:09:24 +0700
+Subject: [PATCH] second init
+
+---
+ drivers/leds/hello.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/leds/hello.c b/drivers/leds/hello.c
+index f3c0d372ebfc..04e5402e6171 100644
+--- a/drivers/leds/hello.c
++++ b/drivers/leds/hello.c
+@@ -30,4 +30,6 @@ void cleanup_module(void)
+ 	printk("Goodbye Cruel World!\n");
+ }
+ 
++module_init(init_module);
++module_exit(cleanup_module);
+ MODULE_LICENSE("GPL");
+-- 
+2.25.1
+

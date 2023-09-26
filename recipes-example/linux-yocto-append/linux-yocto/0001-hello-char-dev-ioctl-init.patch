@@ -1,0 +1,94 @@
+From 2e98e3a16e277209ae41e6817f54ac0b4540f276 Mon Sep 17 00:00:00 2001
+From: OpenEmbedded <oe.patch@oe>
+Date: Tue, 26 Sep 2023 16:24:23 +0700
+Subject: [PATCH] hello char dev ioctl init
+
+---
+ drivers/leds/hello.c | 38 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 36 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/leds/hello.c b/drivers/leds/hello.c
+index 43c8a25cbae6..34c85b30604b 100644
+--- a/drivers/leds/hello.c
++++ b/drivers/leds/hello.c
+@@ -23,11 +23,16 @@
+ #include <linux/fs.h>
+ #include <asm/uaccess.h>  /* for put_user */
+ #include <asm/errno.h>
++#include <linux/ioctl.h>
+ 
+ #define SUCCESS 0
+ #define DEVICE_NAME "hello" /* Dev name as it appears in /proc/devices   */
+ #define BUF_LEN 1024            /* Max length of the message from the device */
+ 
++#define MAJOR_NUM 248
++
++#define IOCTL_SET_MIXED _IO(MAJOR_NUM, 0)
++#define IOCTL_SET_UPPER _IO(MAJOR_NUM, 1)
+ 
+ /* Global variables are declared as static, so are global within the file. */
+ 
+@@ -37,6 +42,8 @@ static int Device_Open = 0;  /* Is device open?  Used to prevent multiple
+ static char msg[BUF_LEN];    /* The msg the device will give when asked    */
+ static int numbyte = 0;
+ 
++static int mode = 0;
++
+ 
+ 
+ ssize_t hello_read (struct file * filep, char __user * outb, size_t nbytes, loff_t * offset){
+@@ -49,7 +56,17 @@ ssize_t hello_read (struct file * filep, char __user * outb, size_t nbytes, loff
+ 
+ 	while ((bytes_read < nbytes) && (*offset < numbyte))
+ 	{
+-		put_user(msg[ *offset ], &outb[bytes_read]);
++		if(mode == 0){
++			put_user(msg[ *offset ], &outb[bytes_read]);
++		}
++		else{
++			if((msg[ *offset ] >= 'a') && msg[ *offset ] <= 'z'){
++				put_user(msg[ *offset ] - 'a' + 'A', &outb[bytes_read]);
++			}
++			else{
++				put_user(msg[ *offset ], &outb[bytes_read]);
++			}
++		}
+ 		*offset = *offset + 1;
+ 		bytes_read ++;
+ 	}
+@@ -85,6 +102,22 @@ int hello_open (struct inode *inodep, struct file * filep){
+ 	return 0;
+ }
+ 
++long hello_ioctl(struct file *filep, unsigned int ioctl_num, unsigned long ioctl_param)
++{
++	switch(ioctl_num) {
++		case IOCTL_SET_MIXED:
++			mode = 0;
++			break;
++		
++		case IOCTL_SET_UPPER:
++			mode = 1;
++			break;
++	}
++
++	printk("IOCTL set mode %d\n", mode);
++	return 0;
++}
++
+ int hello_release (struct inode * inodep, struct file * filep){
+ 	if (Device_Open == 0){
+ 		printk("ERROR - device was not opened\n");
+@@ -101,7 +134,8 @@ static struct file_operations fops = {
+        .read = hello_read,
+        .write = hello_write,
+        .open = hello_open,
+-       .release = hello_release
++       .unlocked_ioctl = hello_ioctl,
++	   .release = hello_release
+ };
+ 
+ int init_module(void)
+-- 
+2.25.1
+

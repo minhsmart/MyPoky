@@ -1,0 +1,136 @@
+From dff25e0a34778ec4831f63c4b7901eb36c3779b2 Mon Sep 17 00:00:00 2001
+From: OpenEmbedded <oe.patch@oe>
+Date: Tue, 26 Sep 2023 10:47:40 +0700
+Subject: [PATCH] hello char dev init
+
+---
+ drivers/leds/hello.c | 103 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 100 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/leds/hello.c b/drivers/leds/hello.c
+index 04e5402e6171..43c8a25cbae6 100644
+--- a/drivers/leds/hello.c
++++ b/drivers/leds/hello.c
+@@ -18,18 +18,115 @@
+  *****************************************************************************/
+ 
+ #include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/fs.h>
++#include <asm/uaccess.h>  /* for put_user */
++#include <asm/errno.h>
++
++#define SUCCESS 0
++#define DEVICE_NAME "hello" /* Dev name as it appears in /proc/devices   */
++#define BUF_LEN 1024            /* Max length of the message from the device */
++
++
++/* Global variables are declared as static, so are global within the file. */
++
++static int Major;            /* Major number assigned to our device driver */
++static int Device_Open = 0;  /* Is device open?  Used to prevent multiple
++                                        access to the device */
++static char msg[BUF_LEN];    /* The msg the device will give when asked    */
++static int numbyte = 0;
++
++
++
++ssize_t hello_read (struct file * filep, char __user * outb, size_t nbytes, loff_t * offset){
++
++	int bytes_read = 0;
++
++	if(offset == NULL) return -EINVAL;
++
++	if(*offset >= numbyte) return 0;
++
++	while ((bytes_read < nbytes) && (*offset < numbyte))
++	{
++		put_user(msg[ *offset ], &outb[bytes_read]);
++		*offset = *offset + 1;
++		bytes_read ++;
++	}
++	return bytes_read;
++
++}
++ssize_t hello_write (struct file * filep, const char __user * inpb, size_t nbytes, loff_t * offset){
++	int bytes_write = 0;
++
++	if(offset == NULL) return -EINVAL;
++
++	if(*offset >= 1023) return -EINVAL;
++
++	while ((bytes_write < nbytes) && (*offset < 1023))
++	{
++		get_user(msg[ *offset ], &inpb[bytes_write]);
++		*offset = *offset + 1;
++		bytes_write ++;
++	}
++	printk("(%s)\n", msg);
++	return bytes_write;
++}
++
++int hello_open (struct inode *inodep, struct file * filep){
++
++	if (Device_Open == 1){
++		printk("ERROR - device already open\n");
++		return -EBUSY;
++	}
++	Device_Open = 1;
++
++	try_module_get(THIS_MODULE);
++	return 0;
++}
++
++int hello_release (struct inode * inodep, struct file * filep){
++	if (Device_Open == 0){
++		printk("ERROR - device was not opened\n");
++		return -EBUSY;
++	}
++	Device_Open = 0;
++
++	module_put(THIS_MODULE);
++
++	return 0;
++}
++
++static struct file_operations fops = {
++       .read = hello_read,
++       .write = hello_write,
++       .open = hello_open,
++       .release = hello_release
++};
+ 
+ int init_module(void)
+ {
+-	printk("Hello World!\n");
++	printk("Hello, I am Minh!!\n");
++
++	strncpy(msg, "Hello World", 1023);
++	numbyte = strlen(msg);
++
++	Major = register_chrdev(0, DEVICE_NAME, &fops);
++	
++	if (Major < 0) {
++    	printk ("Registering the hello device failed with %d\n", Major);
++    	return Major;
++    }
++	printk("<1> major number %d.  To talk to\n", Major);
++
+ 	return 0;
+ }
+ 
+ void cleanup_module(void)
+ {
+-	printk("Goodbye Cruel World!\n");
++	printk("Goodbye :33!\n");
+ }
+ 
+ module_init(init_module);
+ module_exit(cleanup_module);
+-MODULE_LICENSE("GPL");
++MODULE_LICENSE("GPL");
+\ No newline at end of file
+-- 
+2.25.1
+

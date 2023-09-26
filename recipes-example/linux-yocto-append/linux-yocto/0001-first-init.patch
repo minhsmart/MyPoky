@@ -1,0 +1,85 @@
+From fc6ce6d0afe1d4f2051dbf87eb33214de8b0db4e Mon Sep 17 00:00:00 2001
+From: OpenEmbedded <oe.patch@oe>
+Date: Mon, 25 Sep 2023 15:28:08 +0700
+Subject: [PATCH] first init
+
+---
+ drivers/leds/Kconfig  |  5 +++++
+ drivers/leds/Makefile |  3 +++
+ drivers/leds/hello.c  | 35 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 43 insertions(+)
+ create mode 100644 drivers/leds/hello.c
+
+diff --git a/drivers/leds/Kconfig b/drivers/leds/Kconfig
+index 2cbf66d1c300..e38c1e813d05 100644
+--- a/drivers/leds/Kconfig
++++ b/drivers/leds/Kconfig
+@@ -14,6 +14,11 @@ menuconfig NEW_LEDS
+ 
+ if NEW_LEDS
+ 
++config HELLO
++	tristate "Hello driver"
++	help
++      Say Y if you want to enable support for Hello driver.
++
+ config LEDS_CLASS
+ 	tristate "LED Class Support"
+ 	help
+diff --git a/drivers/leds/Makefile b/drivers/leds/Makefile
+index 41fb073a39c1..4642fbf7dbe7 100644
+--- a/drivers/leds/Makefile
++++ b/drivers/leds/Makefile
+@@ -93,5 +93,8 @@ obj-$(CONFIG_LEDS_DAC124S085)		+= leds-dac124s085.o
+ # LED Userspace Drivers
+ obj-$(CONFIG_LEDS_USER)			+= uleds.o
+ 
++# Hello
++obj-$(CONFIG_HELLO)			+= hello.o
++
+ # LED Triggers
+ obj-$(CONFIG_LEDS_TRIGGERS)		+= trigger/
+diff --git a/drivers/leds/hello.c b/drivers/leds/hello.c
+new file mode 100644
+index 000000000000..04e5402e6171
+--- /dev/null
++++ b/drivers/leds/hello.c
+@@ -0,0 +1,35 @@
++/******************************************************************************
++ *
++ *   Copyright (C) 2011  Intel Corporation. All rights reserved.
++ *
++ *   This program is free software;  you can redistribute it and/or modify
++ *   it under the terms of the GNU General Public License as published by
++ *   the Free Software Foundation; version 2 of the License.
++ *
++ *   This program is distributed in the hope that it will be useful,
++ *   but WITHOUT ANY WARRANTY;  without even the implied warranty of
++ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
++ *   the GNU General Public License for more details.
++ *
++ *   You should have received a copy of the GNU General Public License
++ *   along with this program;  if not, write to the Free Software
++ *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ *
++ *****************************************************************************/
++
++#include <linux/module.h>
++
++int init_module(void)
++{
++	printk("Hello World!\n");
++	return 0;
++}
++
++void cleanup_module(void)
++{
++	printk("Goodbye Cruel World!\n");
++}
++
++module_init(init_module);
++module_exit(cleanup_module);
++MODULE_LICENSE("GPL");
+-- 
+2.25.1
+
